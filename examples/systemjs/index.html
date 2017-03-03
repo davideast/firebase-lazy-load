@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Firebase Lazy Load - SystemJS</title>
+  </head>
+  <body>
+    <button id="btnLoginSave">Sign in anonymously</button>
+    <input id="txtType" type="text">
+    <button id="btnSave">Save to database</button>
+    <h2 id="text"></h2>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.9/system.js"></script>
+    <script>
+      SystemJS.config({
+        map: {
+          'firebase/auth': 'firebase/firebase-auth.js',
+          'firebase/database': 'firebase/firebase-database.js'
+        }
+      });
+    </script>
+    <script src="firebase/firebase-app.js"></script>
+    <script src="firebase/firebase-lazy.js"></script>
+    <script>
+      var btnLoginSave = document.getElementById('btnLoginSave');
+      var btnSave = document.getElementById('btnSave');
+      var txtType = document.getElementById('txtType');
+      var uidHeader = document.getElementById('uidHeader');
+      var config = {
+        apiKey: "AIzaSyDlB5QdHfduj6ssdn_R8YLU0q4sNuddNTs",
+        authDomain: "fir-lazy-load.firebaseapp.com",
+        databaseURL: "https://fir-lazy-load.firebaseio.com",
+        storageBucket: "fir-lazy-load.appspot.com",
+        messagingSenderId: "133637083828"
+      };
+      var asyncApp = firebaseLazy.asyncApp({
+        firebase,
+        config,
+        appName: 'app'
+      });
+
+      btnLoginSave.addEventListener('click', e => {
+        asyncApp.load('AUTH', 'DATABASE').then(loadedApp => {
+          const auth = loadedApp.auth();
+          const db = loadedApp.database();
+
+          auth.signInAnonymously()
+            .catch(error => console.error(error));
+
+          auth.onAuthStateChanged(user => {
+            if(!user) { return; }
+
+            btnSave.addEventListener('click', e => {
+              db.ref(user.uid).set(txtType.value);
+            });        
+
+          });
+          
+        });
+
+      });
+
+    </script>
+  </body>
+</html>
